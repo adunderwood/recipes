@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{RECIPE_NAME}} - Everything that Rises</title>
+    <meta name="description" content="{{META_DESCRIPTION}}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{RECIPE_URL}}">
+    <meta property="og:title" content="{{RECIPE_NAME}}">
+    <meta property="og:description" content="{{META_DESCRIPTION}}">
+    {{OG_IMAGE}}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{RECIPE_URL}}">
+    <meta property="twitter:title" content="{{RECIPE_NAME}}">
+    <meta property="twitter:description" content="{{META_DESCRIPTION}}">
+    {{TWITTER_IMAGE}}
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{RECIPE_URL}}">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+{{JSON_LD}}
+    </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-8KBWFBFNLF');
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="container nav-container">
+            <a href="/" class="nav-brand" aria-label="Return to recipe collection homepage">← Back to All Recipes</a>
+            <button onclick="window.print()" class="print-btn" aria-label="Print this recipe">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                    <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+                <span class="print-btn-text">Print</span>
+            </button>
+        </div>
+    </nav>
+
+    <div id="hamburgerMenu">
+        <div class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <nav class="hamburger-dropdown">
+            <div class="menu-panel" id="mainMenu">
+                <div class="menu">
+                    <a href="/">Home</a>
+                </div>
+                <div class="menu">
+                    <a href="/about">About</a>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <main id="main-content" class="container" role="main">
+        <article class="recipe-detail">
+            <header class="recipe-header">
+                <h1>{{RECIPE_NAME}}</h1>
+                {{DESCRIPTION}}
+                {{CATEGORIES}}
+            </header>
+
+            {{RECIPE_IMAGE}}
+
+            <div class="recipe-meta">
+                {{PREP_TIME}}
+                {{TOTAL_TIME}}
+                {{YIELD}}
+            </div>
+
+            <section class="recipe-section" aria-labelledby="ingredients-heading">
+                <h2 id="ingredients-heading">Ingredients</h2>
+                <ul class="ingredients-list" role="list">
+                    {{INGREDIENTS}}
+                </ul>
+            </section>
+
+            <section class="recipe-section" aria-labelledby="instructions-heading">
+                <h2 id="instructions-heading">Instructions</h2>
+                <ol class="instructions-list" role="list">
+                    {{INSTRUCTIONS}}
+                </ol>
+            </section>
+
+            {{NOTES}}
+
+            {{FOOTER}}
+        </article>
+    </main>
+    <script>
+        // Hamburger menu functionality
+        const hamburgerMenu = document.getElementById('hamburgerMenu');
+        const hamburgerIcon = hamburgerMenu.querySelector('.hamburger-icon');
+
+        hamburgerIcon.addEventListener('click', () => {
+            hamburgerMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!hamburgerMenu.contains(e.target)) {
+                hamburgerMenu.classList.remove('active');
+            }
+        });
+
+        // Close menu when clicking on menu links
+        const menuLinks = hamburgerMenu.querySelectorAll('.menu a');
+        menuLinks.forEach(link => {
+            link.addEventListener('click', () => {
+                hamburgerMenu.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+</html>

@@ -23,9 +23,11 @@ Place your `recipes.json` export file in the `data/` directory.
 ```
 
 This script will:
-1. Download all recipe images to the `images/` directory
-2. Copy images to `public/images/`
-3. Generate HTML pages for all recipes in the `public/` directory
+1. Check that `data/recipes.json` exists
+2. Download all recipe images to the `images/` directory
+3. Copy images to `public/images/`
+4. Copy CSS to `public/css/`
+5. Generate HTML pages for all recipes in the `public/` directory from templates
 
 ### 3. View your website locally
 
@@ -64,8 +66,8 @@ recipes/
 When you add new recipes in Recipe Sage:
 
 1. Export the updated `recipes.json` and place it in `data/`
-2. Run `./build.sh` again
-3. The script will only download new images and regenerate the site
+2. Run `./build.sh`
+3. The script will download any new images and regenerate all pages from templates
 
 ## Deploying to the Web
 
@@ -111,9 +113,13 @@ Changes to `style.css` will be copied to `public/css/style.css` on the next buil
 
 Edit `templates/about.html` to customize the about page content. This file is copied to `public/about.html` during the build process and will preserve your edits across rebuilds.
 
-### Recipe Templates
+### Recipe Page Template
 
-The recipe page templates are embedded in `generate_site.py`. You can modify the `generate_recipe_page()` and `generate_index_page()` functions to customize the layout.
+Edit `templates/recipe.html` to customize the layout and structure of individual recipe pages. The template uses placeholders like `{{RECIPE_NAME}}`, `{{INGREDIENTS}}`, etc. that are replaced with actual recipe data during the build. Changes to this template will be applied to all recipe pages on the next build.
+
+### Index Page Template
+
+Edit `templates/index.html` to customize the homepage layout and structure. The template uses placeholders like `{{RECIPE_COUNT}}`, `{{RECIPE_CARDS}}`, `{{CATEGORY_FILTERS}}`, etc. The JavaScript for search and filtering is generated dynamically but you can modify the HTML structure and static content.
 
 ## Requirements
 

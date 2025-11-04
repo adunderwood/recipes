@@ -66,7 +66,15 @@ def parse_duration(duration_str):
     return ' '.join(parts) if parts else ''
 
 def generate_recipe_page(recipe, output_dir):
-    """Generate individual recipe HTML page."""
+    """Generate individual recipe HTML page from template."""
+    # Load template
+    template_path = Path('templates/recipe.html')
+    if not template_path.exists():
+        raise FileNotFoundError("templates/recipe.html not found")
+
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template = f.read()
+
     recipe_id = recipe.get('identifier', '')
     slug = slugify(recipe.get('name', 'recipe'))
     filename = f"{slug}"
@@ -173,147 +181,33 @@ def generate_recipe_page(recipe, output_dir):
 
     json_ld_script = json.dumps(json_ld, ensure_ascii=False, indent=2)
 
-    # Generate HTML
-    html = f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{name} - Everything that Rises</title>
-    <meta name="description" content="{meta_description}">
+    # Prepare template replacements
+    replacements = {
+        '{{RECIPE_NAME}}': name,
+        '{{META_DESCRIPTION}}': meta_description,
+        '{{RECIPE_URL}}': recipe_url,
+        '{{OG_IMAGE}}': f'<meta property="og:image" content="{full_image_url}">' if full_image_url else '',
+        '{{TWITTER_IMAGE}}': f'<meta property="twitter:image" content="{full_image_url}">' if full_image_url else '',
+        '{{JSON_LD}}': json_ld_script,
+        '{{DESCRIPTION}}': f'<p class="description">{description}</p>' if description else '',
+        '{{CATEGORIES}}': f'<div class="categories">{categories_html}</div>' if categories_html else '',
+        '{{RECIPE_IMAGE}}': f'<div class="recipe-image"><img src="{image_url}" alt="Photo of {name}"></div>' if image_url else '',
+        '{{PREP_TIME}}': f'<div class="meta-item"><strong>Prep Time:</strong> {prep_time}</div>' if prep_time else '',
+        '{{TOTAL_TIME}}': f'<div class="meta-item"><strong>Total Time:</strong> {total_time}</div>' if total_time else '',
+        '{{YIELD}}': f'<div class="meta-item"><strong>Yield:</strong> {recipe_yield}</div>' if recipe_yield else '',
+        '{{INGREDIENTS}}': ingredients_html,
+        '{{INSTRUCTIONS}}': instructions_html,
+        '{{NOTES}}': f'<section class="recipe-section notes" aria-labelledby="notes-heading"><h2 id="notes-heading">Notes</h2>{notes_html}</section>' if notes_html else '',
+        '{{FOOTER}}': (f'<footer class="recipe-footer" role="contentinfo">' +
+            (f'<p><strong>Source:</strong> {credit}</p>' if credit else '') +
+            (f'<p><a href="{source_url}" target="_blank" rel="noopener" aria-label="View original recipe on {credit if credit else "source website"}">View Original Recipe</a></p>' if source_url else '') +
+            '</footer>') if (credit or source_url) else ''
+    }
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="{recipe_url}">
-    <meta property="og:title" content="{name}">
-    <meta property="og:description" content="{meta_description}">
-    {f'<meta property="og:image" content="{full_image_url}">' if full_image_url else ''}
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{recipe_url}">
-    <meta property="twitter:title" content="{name}">
-    <meta property="twitter:description" content="{meta_description}">
-    {f'<meta property="twitter:image" content="{full_image_url}">' if full_image_url else ''}
-
-    <!-- Canonical URL -->
-    <link rel="canonical" href="{recipe_url}">
-
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-{json_ld_script}
-    </script>
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-
-      gtag('config', 'G-8KBWFBFNLF');
-    </script>
-
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <nav class="navbar" role="navigation" aria-label="Main navigation">
-        <div class="container nav-container">
-            <a href="/" class="nav-brand" aria-label="Return to recipe collection homepage">← Back to All Recipes</a>
-            <button onclick="window.print()" class="print-btn" aria-label="Print this recipe">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                    <rect x="6" y="14" width="12" height="8"></rect>
-                </svg>
-                <span class="print-btn-text">Print</span>
-            </button>
-        </div>
-    </nav>
-
-    <div id="hamburgerMenu">
-        <div class="hamburger-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <nav class="hamburger-dropdown">
-            <div class="menu-panel" id="mainMenu">
-                <div class="menu">
-                    <a href="/">Home</a>
-                </div>
-                <div class="menu">
-                    <a href="/about">About</a>
-                </div>
-            </div>
-        </nav>
-    </div>
-
-    <main id="main-content" class="container" role="main">
-        <article class="recipe-detail">
-            <header class="recipe-header">
-                <h1>{name}</h1>
-                {f'<p class="description">{description}</p>' if description else ''}
-                {f'<div class="categories">{categories_html}</div>' if categories_html else ''}
-            </header>
-
-            {f'<div class="recipe-image"><img src="{image_url}" alt="Photo of {name}"></div>' if image_url else ''}
-
-            <div class="recipe-meta">
-                {f'<div class="meta-item"><strong>Prep Time:</strong> {prep_time}</div>' if prep_time else ''}
-                {f'<div class="meta-item"><strong>Total Time:</strong> {total_time}</div>' if total_time else ''}
-                {f'<div class="meta-item"><strong>Yield:</strong> {recipe_yield}</div>' if recipe_yield else ''}
-            </div>
-
-            <section class="recipe-section" aria-labelledby="ingredients-heading">
-                <h2 id="ingredients-heading">Ingredients</h2>
-                <ul class="ingredients-list" role="list">
-                    {ingredients_html}
-                </ul>
-            </section>
-
-            <section class="recipe-section" aria-labelledby="instructions-heading">
-                <h2 id="instructions-heading">Instructions</h2>
-                <ol class="instructions-list" role="list">
-                    {instructions_html}
-                </ol>
-            </section>
-
-            {f'<section class="recipe-section notes" aria-labelledby="notes-heading"><h2 id="notes-heading">Notes</h2>{notes_html}</section>' if notes_html else ''}
-
-            {f'<footer class="recipe-footer" role="contentinfo">' +
-                (f'<p><strong>Source:</strong> {credit}</p>' if credit else '') +
-                (f'<p><a href="{source_url}" target="_blank" rel="noopener" aria-label="View original recipe on {credit if credit else "source website"}">View Original Recipe</a></p>' if source_url else '') +
-            '</footer>' if (credit or source_url) else ''}
-        </article>
-    </main>
-    <script>
-        // Hamburger menu functionality
-        const hamburgerMenu = document.getElementById('hamburgerMenu');
-        const hamburgerIcon = hamburgerMenu.querySelector('.hamburger-icon');
-
-        hamburgerIcon.addEventListener('click', () => {{
-            hamburgerMenu.classList.toggle('active');
-        }});
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {{
-            if (!hamburgerMenu.contains(e.target)) {{
-                hamburgerMenu.classList.remove('active');
-            }}
-        }});
-
-        // Close menu when clicking on menu links
-        const menuLinks = hamburgerMenu.querySelectorAll('.menu a');
-        menuLinks.forEach(link => {{
-            link.addEventListener('click', () => {{
-                hamburgerMenu.classList.remove('active');
-            }});
-        }});
-    </script>
-</body>
-</html>'''
+    # Apply replacements
+    html = template
+    for placeholder, value in replacements.items():
+        html = html.replace(placeholder, value)
 
     # Write file with .html extension
     output_path = Path(output_dir) / f"{filename}.html"
@@ -378,7 +272,14 @@ def generate_sitemap(recipes_meta, output_dir):
     print(f"Generated sitemap with {len(sitemap_entries)} URLs")
 
 def generate_index_page(recipes_meta, output_dir):
-    """Generate index page with all recipes."""
+    """Generate index page with all recipes from template."""
+    # Load template
+    template_path = Path('templates/index.html')
+    if not template_path.exists():
+        raise FileNotFoundError("templates/index.html not found")
+
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template = f.read()
 
     # Build recipe cards
     cards_html = ''
@@ -421,89 +322,8 @@ def generate_index_page(recipes_meta, output_dir):
     first_image = next((meta['image'] for meta in recipes_meta if meta['image']), '')
     full_first_image = f"{BASE_URL}/{first_image}" if first_image and not first_image.startswith('http') else first_image
 
-    html = f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Everything that Rises - {len(recipes_meta)} Delicious Recipes</title>
-    <meta name="description" content="A curated collection of {len(recipes_meta)} delicious recipes from around the world. Browse, search, and filter recipes by category and ingredients.">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{BASE_URL}">
-    <meta property="og:title" content="Everything that Rises - {len(recipes_meta)} Delicious Recipes">
-    <meta property="og:description" content="A curated collection of {len(recipes_meta)} delicious recipes from around the world. Browse, search, and filter recipes by category and ingredients.">
-    {f'<meta property="og:image" content="{full_first_image}">' if full_first_image else ''}
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{BASE_URL}">
-    <meta property="twitter:title" content="Everything that Rises - {len(recipes_meta)} Delicious Recipes">
-    <meta property="twitter:description" content="A curated collection of {len(recipes_meta)} delicious recipes from around the world. Browse, search, and filter recipes by category and ingredients.">
-    {f'<meta property="twitter:image" content="{full_first_image}">' if full_first_image else ''}
-
-    <!-- Canonical URL -->
-    <link rel="canonical" href="{BASE_URL}">
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-
-      gtag('config', 'G-8KBWFBFNLF');
-    </script>
-
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <nav class="navbar" role="navigation" aria-label="Main navigation">
-        <div class="container">
-            <h1 class="nav-brand">Everything that Rises <img class="wheat" src="/images/wheat.svg" alt="Wheat Stalk Logo"></h1>
-        </div>
-    </nav>
-
-    <div id="hamburgerMenu">
-        <div class="hamburger-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <nav class="hamburger-dropdown">
-            <div class="menu-panel" id="mainMenu">
-                <div class="menu">
-                    <a href="/">Home</a>
-                </div>
-                <div class="menu">
-                    <a href="/about">About</a>
-                </div>
-            </div>
-        </nav>
-    </div>
-
-    <main id="main-content" class="container" role="main">
-        <div class="filters" role="search" aria-label="Recipe search and filters">
-            <label for="search" class="sr-only">Search recipes by name, description, or ingredients</label>
-            <input type="text" id="search" placeholder="Search recipes..." class="search-input" aria-label="Search recipes by name, description, or ingredients">
-            <div class="category-filters" role="group" aria-label="Filter recipes by category">
-                <button class="filter-btn active" data-category="all" aria-pressed="true">All Recipes ({len(recipes_meta)})</button>
-                {categories_filter}
-            </div>
-        </div>
-
-        <div class="recipe-grid" id="recipe-grid" role="list" aria-label="Recipe cards">
-            {cards_html}
-        </div>
-
-        <div id="no-results" class="no-results" style="display: none;">
-            <p>No recipes found matching your criteria.</p>
-        </div>
-    </main>
-
-    <script>
+    # Build JavaScript (needs {{ escaping for Python f-strings)
+    javascript = f'''<script>
         // Search and filter functionality
         const searchInput = document.getElementById('search');
         const filterBtns = document.querySelectorAll('.filter-btn');
@@ -513,102 +333,116 @@ def generate_index_page(recipes_meta, output_dir):
         let currentCategory = 'all';
         let currentSearch = '';
 
-        function filterRecipes() {{
+        function filterRecipes() {{{{
             let visibleCount = 0;
 
-            recipeCards.forEach(card => {{
+            recipeCards.forEach(card => {{{{
                 const cardName = card.querySelector('h2').textContent.toLowerCase();
                 const cardDesc = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
                 const cardIngredients = card.dataset.ingredients || '';
                 const cardCategories = JSON.parse(card.dataset.categories || '[]');
 
                 let matchesSearch = false;
-                if (currentSearch === '') {{
+                if (currentSearch === '') {{{{
                     matchesSearch = true;
-                }} else if (currentSearch.length === 1) {{
+                }}}} else if (currentSearch.length === 1) {{{{
                     // For single character, match word-initial letters in title only
                     const nameWords = cardName.split(/\\s+/);
                     matchesSearch = nameWords.some(word => word.startsWith(currentSearch));
-                }} else {{
+                }}}} else {{{{
                     // For 2+ characters, search title, description, and ingredients
                     matchesSearch = cardName.includes(currentSearch) ||
                                     cardDesc.includes(currentSearch) ||
                                     cardIngredients.includes(currentSearch);
-                }}
+                }}}}
 
                 const matchesCategory = currentCategory === 'all' ||
                     cardCategories.includes(currentCategory);
 
-                if (matchesSearch && matchesCategory) {{
+                if (matchesSearch && matchesCategory) {{{{
                     card.style.display = '';
                     visibleCount++;
-                }} else {{
+                }}}} else {{{{
                     card.style.display = 'none';
-                }}
-            }});
+                }}}}
+            }}}});
 
             noResults.style.display = visibleCount === 0 ? 'block' : 'none';
-        }}
+        }}}}
 
-        searchInput.addEventListener('input', (e) => {{
+        searchInput.addEventListener('input', (e) => {{{{
             currentSearch = e.target.value.toLowerCase();
             filterRecipes();
-        }});
+        }}}});
 
-        filterBtns.forEach(btn => {{
-            btn.addEventListener('click', () => {{
+        filterBtns.forEach(btn => {{{{
+            btn.addEventListener('click', () => {{{{
                 // If clicking an already active button (except "All Recipes"), toggle it off
-                if (btn.classList.contains('active') && btn.dataset.category !== 'all') {{
+                if (btn.classList.contains('active') && btn.dataset.category !== 'all') {{{{
                     // Find and activate the "All Recipes" button
-                    filterBtns.forEach(b => {{
+                    filterBtns.forEach(b => {{{{
                         b.classList.remove('active');
                         b.setAttribute('aria-pressed', 'false');
-                    }});
+                    }}}});
                     const allBtn = Array.from(filterBtns).find(b => b.dataset.category === 'all');
-                    if (allBtn) {{
+                    if (allBtn) {{{{
                         allBtn.classList.add('active');
                         allBtn.setAttribute('aria-pressed', 'true');
                         currentCategory = 'all';
-                    }}
-                }} else {{
+                    }}}}
+                }}}} else {{{{
                     // Normal behavior: activate the clicked button
-                    filterBtns.forEach(b => {{
+                    filterBtns.forEach(b => {{{{
                         b.classList.remove('active');
                         b.setAttribute('aria-pressed', 'false');
-                    }});
+                    }}}});
                     btn.classList.add('active');
                     btn.setAttribute('aria-pressed', 'true');
                     currentCategory = btn.dataset.category;
-                }}
+                }}}}
                 filterRecipes();
-            }});
-        }});
+            }}}});
+        }}}});
 
         // Hamburger menu functionality
         const hamburgerMenu = document.getElementById('hamburgerMenu');
         const hamburgerIcon = hamburgerMenu.querySelector('.hamburger-icon');
 
-        hamburgerIcon.addEventListener('click', () => {{
+        hamburgerIcon.addEventListener('click', () => {{{{
             hamburgerMenu.classList.toggle('active');
-        }});
+        }}}});
 
         // Close menu when clicking outside
-        document.addEventListener('click', (e) => {{
-            if (!hamburgerMenu.contains(e.target)) {{
+        document.addEventListener('click', (e) => {{{{
+            if (!hamburgerMenu.contains(e.target)) {{{{
                 hamburgerMenu.classList.remove('active');
-            }}
-        }});
+            }}}}
+        }}}});
 
         // Close menu when clicking on menu links
         const menuLinks = hamburgerMenu.querySelectorAll('.menu a');
-        menuLinks.forEach(link => {{
-            link.addEventListener('click', () => {{
+        menuLinks.forEach(link => {{{{
+            link.addEventListener('click', () => {{{{
                 hamburgerMenu.classList.remove('active');
-            }});
-        }});
-    </script>
-</body>
-</html>'''
+            }}}});
+        }}}});
+    </script>'''
+
+    # Prepare template replacements
+    replacements = {
+        '{{RECIPE_COUNT}}': str(len(recipes_meta)),
+        '{{BASE_URL}}': BASE_URL,
+        '{{OG_IMAGE}}': f'<meta property="og:image" content="{full_first_image}">' if full_first_image else '',
+        '{{TWITTER_IMAGE}}': f'<meta property="twitter:image" content="{full_first_image}">' if full_first_image else '',
+        '{{CATEGORY_FILTERS}}': categories_filter,
+        '{{RECIPE_CARDS}}': cards_html,
+        '{{JAVASCRIPT}}': javascript
+    }
+
+    # Apply replacements
+    html = template
+    for placeholder, value in replacements.items():
+        html = html.replace(placeholder, value)
 
     output_path = Path(output_dir) / 'index.html'
     with open(output_path, 'w', encoding='utf-8') as f:
