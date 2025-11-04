@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About - Everything that Rises</title>
+    <meta
+      name="description"
+      content="Learn about Everything that Rises, a curated collection of delicious recipes."
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://everything.thatrises.com/about" />
+    <meta property="og:title" content="About - Everything that Rises" />
+    <meta
+      property="og:description"
+      content="Learn about Everything that Rises, a curated collection of delicious recipes."
+    />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary" />
+    <meta
+      property="twitter:url"
+      content="https://everything.thatrises.com/about"
+    />
+    <meta property="twitter:title" content="About - Everything that Rises" />
+    <meta
+      property="twitter:description"
+      content="Learn about Everything that Rises, a curated collection of delicious recipes."
+    />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://everything.thatrises.com/about" />
+
+    <!-- Google tag (gtag.js) -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag("js", new Date());
+
+      gtag("config", "G-8KBWFBFNLF");
+    </script>
+
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+      <div class="container nav-container">
+        <a
+          href="/"
+          class="nav-brand"
+          aria-label="Return to recipe collection homepage"
+          >← Back to All Recipes</a
+        >
+      </div>
+    </nav>
+
+    <div id="hamburgerMenu">
+      <div class="hamburger-icon">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <nav class="hamburger-dropdown">
+        <div class="menu-panel" id="mainMenu">
+          <div class="menu">
+            <a href="/">Home</a>
+          </div>
+          <div class="menu">
+            <a href="/about">About</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <main id="main-content" class="container" role="main">
+      <article class="recipe-detail">
+        <header class="recipe-header">
+          <h1>About Everything that Rises</h1>
+        </header>
+
+        <section class="recipe-section">
+          <p>
+            Everything that Rises is my personally curated collection of recipes
+            gathered from around the world. This site was created to preserve
+            and share beloved recipes in a simple, accessible format.
+          </p>
+          <br />
+          <p>
+            All recipes are exported from RecipeSage and generated as a static
+            website for easy browsing, searching, and cooking. This is a
+            personal colllection only and not for profit or commercial purposes.
+            While many recipes are collected from online sources, credit has
+            been given with links to the original recipe, even when adapted or
+            even sometimes heavily adapted.
+          </p>
+          <br />
+          <p>
+            To request removal of a recipe or photo,
+            <a href="mailto:alan@alanunderwood.com"
+              >please write to me directly</a
+            >
+          </p>
+        </section>
+      </article>
+    </main>
+    <script>
+      // Hamburger menu functionality
+      const hamburgerMenu = document.getElementById("hamburgerMenu");
+      const hamburgerIcon = hamburgerMenu.querySelector(".hamburger-icon");
+
+      hamburgerIcon.addEventListener("click", () => {
+        hamburgerMenu.classList.toggle("active");
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!hamburgerMenu.contains(e.target)) {
+          hamburgerMenu.classList.remove("active");
+        }
+      });
+
+      // Close menu when clicking on menu links
+      const menuLinks = hamburgerMenu.querySelectorAll(".menu a");
+      menuLinks.forEach((link) => {
+        link.addEventListener("click", () => {
+          hamburgerMenu.classList.remove("active");
+        });
+      });
+    </script>
+  </body>
+</html>
