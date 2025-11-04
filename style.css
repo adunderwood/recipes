@@ -109,7 +109,8 @@ body {
   background: var(--white);
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  /* box-shadow: var(--shadow); */
+  border: 1px solid var(--border-color);
   margin-bottom: 2rem;
 }
 
@@ -117,7 +118,7 @@ body {
   width: 100%;
   padding: 0.875rem 1.25rem;
   font-size: 1rem;
-  border: 2px solid var(--border-color);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   margin-bottom: 1rem;
   transition: border-color 0.3s;
@@ -145,7 +146,7 @@ body {
 .filter-btn:hover,
 .filter-btn:focus-visible {
   outline: none;
-  background: var(--primary-light);
+  background: var(--bg-light);
   border-color: var(--primary-color);
   color: var(--text-dark);
 }
@@ -168,15 +169,16 @@ body {
   background: var(--white);
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: var(--shadow);
-  transition: outline 0.2s;
+  /* box-shadow: var(--shadow); */
+  border: 1px solid var(--border-color);
+  transition: outline 0s;
   display: flex;
   flex-direction: column;
 }
 
 .recipe-card:hover {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
+  outline: 1px solid var(--primary-color);
+  outline-offset: -2px;
 }
 
 .card-link {
@@ -188,8 +190,8 @@ body {
 }
 
 .recipe-card:has(.card-link:focus-visible) {
-  outline: 3px solid var(--primary-color);
-  outline-offset: 2px;
+  outline: 1px solid var(--primary-color);
+  outline-offset: -2px;
 }
 
 .card-image {
@@ -690,7 +692,7 @@ input[type="search"]:focus-visible,
     --primary-color: #006064;
     --text-dark: #000000;
     --text-light: #333333;
-    --border-color: #000000;
+    --border-color: #eaeaea;
     --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     --shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.4);
   }

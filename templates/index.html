@@ -64,7 +64,7 @@
     <main id="main-content" class="container" role="main">
         <div class="filters" role="search" aria-label="Recipe search and filters">
             <label for="search" class="sr-only">Search recipes by name, description, or ingredients</label>
-            <input type="text" id="search" placeholder="Search recipes..." class="search-input" aria-label="Search recipes by name, description, or ingredients">
+            <input type="text" id="search" placeholder="Search recipes (comma-separated for multiple ingredients)..." class="search-input" aria-label="Search recipes by name, description, or ingredients. Use commas to search for multiple ingredients.">
             <div class="category-filters" role="group" aria-label="Filter recipes by category">
                 <button class="filter-btn active" data-category="all" aria-pressed="true">All Recipes ({{RECIPE_COUNT}})</button>
                 {{CATEGORY_FILTERS}}

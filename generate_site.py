@@ -345,6 +345,10 @@ def generate_index_page(recipes_meta, output_dir):
                 let matchesSearch = false;
                 if (currentSearch === '') {{{{
                     matchesSearch = true;
+                }}}} else if (currentSearch.includes(',')) {{{{
+                    // Comma-separated search: AND logic - all terms must match in ingredients
+                    const searchTerms = currentSearch.split(',').map(term => term.trim()).filter(term => term.length > 0);
+                    matchesSearch = searchTerms.every(term => cardIngredients.includes(term));
                 }}}} else if (currentSearch.length === 1) {{{{
                     // For single character, match word-initial letters in title only
                     const nameWords = cardName.split(/\\s+/);
