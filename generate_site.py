@@ -65,6 +65,49 @@ def parse_duration(duration_str):
 
     return ' '.join(parts) if parts else ''
 
+def normalize_ingredient_text(ingredient):
+    """Return a cleaned ingredient string."""
+    return str(ingredient).strip()
+
+def is_ingredient_header(ingredient):
+    """Treat bracketed or dash-prefixed ingredients as section headers."""
+    ingredient_text = normalize_ingredient_text(ingredient)
+    return ingredient_text.startswith('-') or (
+        ingredient_text.startswith('[') and ingredient_text.endswith(']')
+    )
+
+def extract_ingredient_header_text(ingredient):
+    """Return display text for supported ingredient header formats."""
+    ingredient_text = normalize_ingredient_text(ingredient)
+
+    if ingredient_text.startswith('-'):
+        return ingredient_text[1:].strip()
+
+    if ingredient_text.startswith('[') and ingredient_text.endswith(']'):
+        return ingredient_text[1:-1].strip()
+
+    return ingredient_text
+
+def is_ingredient_spacer(ingredient):
+    """Treat empty ingredient rows as visual spacers."""
+    return normalize_ingredient_text(ingredient) == ''
+
+def format_ingredient_item(ingredient):
+    """Render an ingredient list item, supporting header rows without checkboxes."""
+    ingredient_text = normalize_ingredient_text(ingredient)
+
+    if is_ingredient_spacer(ingredient_text):
+        return '<li class="ingredient-spacer" aria-hidden="true"></li>'
+
+    if is_ingredient_header(ingredient_text):
+        header_text = extract_ingredient_header_text(ingredient_text)
+        return f'<li class="ingredient-header">{escape(header_text)}</li>'
+
+    return (
+        f'<li><label class="ingredient-checkbox"><input type="checkbox" '
+        f'aria-label="Check off {escape(ingredient_text)}"><span>{escape(ingredient_text)}</span></label></li>'
+    )
+
 def generate_recipe_page(recipe, output_dir):
     """Generate individual recipe HTML page from template."""
     # Load template
@@ -102,10 +145,7 @@ def generate_recipe_page(recipe, output_dir):
 
     # Ingredients with checkboxes
     ingredients = recipe.get('recipeIngredient', [])
-    ingredients_html = '\n'.join([
-        f'<li><label class="ingredient-checkbox"><input type="checkbox" aria-label="Check off {escape(ing)}"><span>{escape(ing)}</span></label></li>'
-        for ing in ingredients
-    ])
+    ingredients_html = '\n'.join([format_ingredient_item(ing) for ing in ingredients])
 
     # Instructions
     instructions = recipe.get('recipeInstructions', [])
@@ -289,7 +329,14 @@ def generate_index_page(recipes_meta, output_dir):
         image_html = f'<img src="{meta["image"]}" alt="{alt_text}">' if meta['image'] else '<div class="no-image" role="img" aria-label="No image available">No Image</div>'
         categories_html = ' '.join([f'<span class="category">{escape(cat)}</span>' for cat in meta['categories']])
 
-        ingredients_text = ' '.join(meta['ingredients']).lower()
+        searchable_ingredients = [
+            normalize_ingredient_text(ingredient)
+            for ingredient in meta['ingredients']
+            if normalize_ingredient_text(ingredient)
+            and not is_ingredient_spacer(ingredient)
+            and not is_ingredient_header(ingredient)
+        ]
+        ingredients_text = ' '.join(searchable_ingredients).lower()
         cards_html += f'''
         <article class="recipe-card" role="listitem" data-categories='{json.dumps(meta["categories"])}' data-ingredients="{escape(ingredients_text)}">
             <a href="{meta['filename']}" class="card-link" aria-label="View recipe for {escape(meta['name'])}">
