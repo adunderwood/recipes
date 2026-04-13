@@ -13,6 +13,7 @@ from html import escape
 # Configuration
 BASE_URL = 'https://everything.thatrises.com'
 PARTIALS_DIR = Path('templates/partials')
+STYLE_CSS_PATH = Path('style.css')
 
 
 def load_partial(path):
@@ -111,6 +112,7 @@ def build_head_replacements(
     twitter_image_alt='',
 ):
     """Build the shared placeholder replacements for the page head partial."""
+    style_version = str(int(STYLE_CSS_PATH.stat().st_mtime)) if STYLE_CSS_PATH.exists() else '1'
     return {
         '{{PAGE_TITLE}}': page_title,
         '{{META_DESCRIPTION}}': meta_description,
@@ -125,6 +127,7 @@ def build_head_replacements(
         '{{TWITTER_EXTRA}}': build_twitter_extra(twitter_image_url, twitter_image_alt),
         '{{CANONICAL_URL}}': canonical_url,
         '{{JSON_LD_BLOCK}}': build_json_ld_block(json_ld_data),
+        '{{STYLE_VERSION}}': style_version,
     }
 
 
@@ -139,13 +142,6 @@ def build_recipe_nav_actions():
                     </svg>
                     <span class="print-btn-text">Print</span>
                 </button>
-                <button onclick="printRecipeCard()" class="print-btn print-btn-card" aria-label="Print as recipe card">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                        <line x1="2" y1="10" x2="22" y2="10"></line>
-                    </svg>
-                    <span class="print-btn-text">Card</span>
-                </button>
             </div>'''
 
 
@@ -153,7 +149,6 @@ def build_about_nav_actions():
     """Return invisible nav actions so the About header matches recipe-page geometry."""
     return '''<div class="print-controls about-nav-actions" aria-hidden="true">
                 <button class="print-btn" tabindex="-1">Print</button>
-                <button class="print-btn print-btn-card" tabindex="-1">Card</button>
             </div>'''
 
 
