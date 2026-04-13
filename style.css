@@ -1,3 +1,52 @@
+/* Theme Tokens */
+:root {
+  --primary-color: #5f4433;
+  --primary-strong: #4f3728;
+  --primary-soft: #8b6951;
+  --primary-light: #efe3d6;
+  --secondary-color: #c66a2b;
+  --text-dark: #1f2421;
+  --text-light: #5f645d;
+  --white: #ffffff;
+  --bg-light: #f7f1e7;
+  --surface-soft: rgba(255, 252, 247, 0.88);
+  --surface-strong: #fffdf8;
+  --border-color: rgba(70, 63, 54, 0.12);
+  --surface-border-soft: rgba(70, 63, 54, 0.08);
+  --surface-rule: rgba(70, 63, 54, 0.1);
+  --panel-highlight: rgba(255, 255, 255, 0.55);
+  --shadow: 0 18px 40px rgba(64, 45, 26, 0.08);
+  --shadow-hover: 0 24px 48px rgba(64, 45, 26, 0.14);
+  --image-shadow: 0 16px 28px rgba(52, 42, 28, 0.12);
+  --focus-ring: rgba(95, 68, 51, 0.12);
+  --primary-border-soft: rgba(95, 68, 51, 0.12);
+  --primary-border: rgba(95, 68, 51, 0.14);
+  --primary-border-strong: rgba(95, 68, 51, 0.22);
+  --primary-rule: rgba(95, 68, 51, 0.09);
+  --primary-tint: rgba(239, 227, 214, 0.95);
+  --card-gradient-start: rgba(95, 68, 51, 0.1);
+  --empty-state-border: rgba(95, 68, 51, 0.2);
+  --meta-item-bg: rgba(255, 255, 255, 0.42);
+  --section-bg: rgba(255, 255, 255, 0.72);
+  --recipe-image-bg: rgba(255, 249, 240, 0.95);
+  --surface-elevated: rgba(255, 252, 247, 0.9);
+  --surface-card: rgba(255, 255, 255, 0.84);
+  --surface-input: rgba(255, 255, 255, 0.76);
+  --surface-control: rgba(255, 255, 255, 0.75);
+  --surface-control-hover: rgba(255, 255, 255, 0.92);
+  --note-bg: #fffbd7;
+  --note-border: rgba(181, 154, 73, 0.18);
+  --radius-large: 32px;
+  --radius-medium: 28px;
+  --radius-card: 24px;
+  --radius-panel: 20px;
+  --radius-input: 16px;
+  --radius-soft: 14px;
+  --radius-pill: 999px;
+  --transition-interactive: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  --transition-card: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+
 /* Reset */
 * {
   margin: 0;
@@ -252,154 +301,6 @@ input[type="search"]:focus-visible,
   outline: none;
   border-color: var(--primary-color);
   box-shadow: 0 0 0 3px var(--focus-ring);
-}
-
-/* Hamburger Menu */
-#hamburgerMenu {
-  position: fixed;
-  top: 2px;
-  right: 8px;
-  width: 70px;
-  height: 70px;
-  z-index: 200;
-  display: flex;
-  align-items: flex-start;
-  justify-content: flex-end;
-  padding: 18px;
-  cursor: default;
-}
-
-.hamburger-icon {
-  width: 32px;
-  height: 26px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  z-index: 201;
-}
-
-.hamburger-icon span {
-  display: block;
-  height: 3px;
-  background-color: var(--primary-color);
-  border-radius: 2px;
-  transition: all 0.3s ease;
-}
-
-.hamburger-dropdown {
-  position: fixed;
-  top: 0;
-  right: -300px;
-  width: 300px;
-  height: 100vh;
-  background-color: var(--white);
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
-  transition: right 0.3s ease;
-  z-index: 199;
-  padding-top: 84px;
-  overflow-y: auto;
-}
-
-.hamburger-dropdown .menu {
-  position: relative;
-  display: block;
-  height: auto;
-  font-family: sans-serif;
-  font-weight: normal;
-  white-space: nowrap;
-  background-color: transparent;
-  border-bottom: 1px solid var(--border-color);
-  margin: 0;
-  padding: 0;
-}
-
-.hamburger-dropdown .menu:last-child {
-  border-bottom: 0;
-}
-
-.hamburger-dropdown .menu a {
-  display: block;
-  width: 100%;
-  min-height: 100%;
-  color: var(--text-dark);
-  font-size: 16px;
-  text-decoration: none;
-  margin: 0;
-  padding: 15px 20px;
-}
-
-.hamburger-dropdown .menu:hover {
-  background-color: var(--primary-light);
-  cursor: pointer;
-}
-
-/* Show dropdown when toggled */
-#hamburgerMenu.active .hamburger-dropdown {
-  right: 0;
-}
-
-/* Animate hamburger icon when active */
-#hamburgerMenu.active .hamburger-icon span:nth-child(1) {
-  transform: translateY(11.5px) rotate(45deg);
-}
-
-#hamburgerMenu.active .hamburger-icon span:nth-child(2) {
-  opacity: 0;
-}
-
-#hamburgerMenu.active .hamburger-icon span:nth-child(3) {
-  transform: translateY(-11.5px) rotate(-45deg);
-}
-
-/* Theme Tokens */
-:root {
-  --primary-color: #5f4433;
-  --primary-strong: #4f3728;
-  --primary-soft: #8b6951;
-  --primary-light: #efe3d6;
-  --secondary-color: #c66a2b;
-  --text-dark: #1f2421;
-  --text-light: #5f645d;
-  --white: #ffffff;
-  --bg-light: #f7f1e7;
-  --surface-soft: rgba(255, 252, 247, 0.88);
-  --surface-strong: #fffdf8;
-  --border-color: rgba(70, 63, 54, 0.12);
-  --surface-border-soft: rgba(70, 63, 54, 0.08);
-  --surface-rule: rgba(70, 63, 54, 0.1);
-  --panel-highlight: rgba(255, 255, 255, 0.55);
-  --shadow: 0 18px 40px rgba(64, 45, 26, 0.08);
-  --shadow-hover: 0 24px 48px rgba(64, 45, 26, 0.14);
-  --image-shadow: 0 16px 28px rgba(52, 42, 28, 0.12);
-  --focus-ring: rgba(95, 68, 51, 0.12);
-  --primary-border-soft: rgba(95, 68, 51, 0.12);
-  --primary-border: rgba(95, 68, 51, 0.14);
-  --primary-border-strong: rgba(95, 68, 51, 0.22);
-  --primary-rule: rgba(95, 68, 51, 0.09);
-  --primary-tint: rgba(239, 227, 214, 0.95);
-  --card-gradient-start: rgba(95, 68, 51, 0.1);
-  --empty-state-border: rgba(95, 68, 51, 0.2);
-  --meta-item-bg: rgba(255, 255, 255, 0.42);
-  --section-bg: rgba(255, 255, 255, 0.72);
-  --recipe-image-bg: rgba(255, 249, 240, 0.95);
-  --surface-elevated: rgba(255, 252, 247, 0.9);
-  --surface-card: rgba(255, 255, 255, 0.84);
-  --surface-input: rgba(255, 255, 255, 0.76);
-  --surface-control: rgba(255, 255, 255, 0.75);
-  --surface-control-hover: rgba(255, 255, 255, 0.92);
-  --note-bg: #fffbd7;
-  --note-border: rgba(181, 154, 73, 0.18);
-  --radius-large: 32px;
-  --radius-medium: 28px;
-  --radius-card: 24px;
-  --radius-panel: 20px;
-  --radius-input: 16px;
-  --radius-soft: 14px;
-  --radius-pill: 999px;
-  --transition-interactive: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  --transition-card: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
 }
 
 /* Page Shell */
@@ -1209,8 +1110,7 @@ a.category:focus-visible {
   .filters,
   .print-btn,
   .skip-link,
-  .categories,
-  #hamburgerMenu {
+  .categories {
     display: none !important;
   }
 

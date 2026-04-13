@@ -37,8 +37,6 @@ def load_template(path):
         '{{PAGE_HEAD}}': PARTIALS_DIR / 'page_head.html',
         '{{HOME_NAV}}': PARTIALS_DIR / 'home_nav.html',
         '{{BACK_NAV}}': PARTIALS_DIR / 'back_nav.html',
-        '{{HAMBURGER_MENU}}': PARTIALS_DIR / 'hamburger_menu.html',
-        '{{HAMBURGER_MENU_SCRIPT}}': PARTIALS_DIR / 'hamburger_menu.js',
     }
 
     for placeholder, partial_path in partials.items():
@@ -415,10 +413,7 @@ def generate_recipe_page(recipe, output_dir):
     if recipe.get('datePublished'):
         json_ld["datePublished"] = recipe.get('datePublished')
 
-    page_scripts = build_page_scripts(
-        load_partial(PARTIALS_DIR / 'print_helpers.js'),
-        load_partial(PARTIALS_DIR / 'hamburger_menu.js')
-    )
+    page_scripts = build_page_scripts(load_partial(PARTIALS_DIR / 'print_helpers.js'))
 
     # Prepare template replacements
     replacements = {
@@ -699,10 +694,7 @@ def generate_index_page(recipes_meta, output_dir):
 
         applyUrlState();
 '''
-    page_scripts = build_page_scripts(
-        search_script,
-        load_partial(PARTIALS_DIR / 'hamburger_menu.js')
-    )
+    page_scripts = build_page_scripts(search_script)
 
     # Prepare template replacements
     replacements = {
@@ -751,7 +743,7 @@ def copy_about_page(output_dir):
         template = load_template(about_template)
         replacements = {
             '{{NAV_ACTIONS}}': build_about_nav_actions(),
-            '{{PAGE_SCRIPTS}}': build_page_scripts(load_partial(PARTIALS_DIR / 'hamburger_menu.js')),
+            '{{PAGE_SCRIPTS}}': '',
         }
         about_title = 'About - Everything that Rises'
         about_description = 'Learn about Everything that Rises, a curated collection of delicious recipes.'
