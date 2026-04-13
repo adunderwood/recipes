@@ -12,6 +12,203 @@ from html import escape
 
 # Configuration
 BASE_URL = 'https://everything.thatrises.com'
+PARTIALS_DIR = Path('templates/partials')
+
+
+def load_partial(path):
+    """Load a shared partial file from disk."""
+    partial_path = Path(path)
+    if not partial_path.exists():
+        raise FileNotFoundError(f"{partial_path} not found")
+    return partial_path.read_text(encoding='utf-8')
+
+
+def load_template(path):
+    """Load a template file and expand shared partial placeholders."""
+    template_path = Path(path)
+    if not template_path.exists():
+        raise FileNotFoundError(f"{path} not found")
+
+    with open(template_path, 'r', encoding='utf-8') as f:
+        template = f.read()
+
+    partials = {
+        '{{PAGE_HEAD}}': PARTIALS_DIR / 'page_head.html',
+        '{{HOME_NAV}}': PARTIALS_DIR / 'home_nav.html',
+        '{{BACK_NAV}}': PARTIALS_DIR / 'back_nav.html',
+        '{{HAMBURGER_MENU}}': PARTIALS_DIR / 'hamburger_menu.html',
+        '{{HAMBURGER_MENU_SCRIPT}}': PARTIALS_DIR / 'hamburger_menu.js',
+    }
+
+    for placeholder, partial_path in partials.items():
+        if placeholder in template:
+            template = template.replace(placeholder, load_partial(partial_path))
+
+    return template
+
+
+def build_page_scripts(*script_parts):
+    """Wrap one or more inline script fragments in a single script tag."""
+    cleaned_parts = [part.strip('\n') for part in script_parts if part and part.strip()]
+    if not cleaned_parts:
+        return ''
+    return '<script>\n' + '\n\n'.join(cleaned_parts) + '\n    </script>'
+
+
+def apply_replacements(template, replacements):
+    """Replace placeholders in a template string."""
+    html = template
+    for placeholder, value in replacements.items():
+        html = html.replace(placeholder, value)
+    return html
+
+
+def build_json_ld_block(data):
+    """Serialize structured data into an inline JSON-LD script block."""
+    if not data:
+        return ''
+    json_ld = json.dumps(data, ensure_ascii=False, indent=2)
+    return f'<script type="application/ld+json">\n{json_ld}\n    </script>'
+
+
+def build_og_extra(image_url='', image_alt=''):
+    """Build optional Open Graph image tags plus the shared site name."""
+    tags = []
+    if image_url:
+        tags.append(f'<meta property="og:image" content="{image_url}">')
+        if image_alt:
+            tags.append(f'<meta property="og:image:alt" content="{image_alt}">')
+    tags.append('<meta property="og:site_name" content="Everything that Rises">')
+    return '\n    '.join(tags)
+
+
+def build_twitter_extra(image_url='', image_alt=''):
+    """Build optional Twitter image tags."""
+    tags = []
+    if image_url:
+        tags.append(f'<meta property="twitter:image" content="{image_url}">')
+        if image_alt:
+            tags.append(f'<meta property="twitter:image:alt" content="{image_alt}">')
+    return '\n    '.join(tags)
+
+
+def build_head_replacements(
+    *,
+    page_title,
+    meta_description,
+    og_type,
+    page_url,
+    og_title,
+    og_description,
+    canonical_url,
+    twitter_card,
+    twitter_title,
+    twitter_description,
+    json_ld_data=None,
+    og_image_url='',
+    og_image_alt='',
+    twitter_image_url='',
+    twitter_image_alt='',
+):
+    """Build the shared placeholder replacements for the page head partial."""
+    return {
+        '{{PAGE_TITLE}}': page_title,
+        '{{META_DESCRIPTION}}': meta_description,
+        '{{OG_TYPE}}': og_type,
+        '{{PAGE_URL}}': page_url,
+        '{{OG_TITLE}}': og_title,
+        '{{OG_DESCRIPTION}}': og_description,
+        '{{OG_EXTRA}}': build_og_extra(og_image_url, og_image_alt),
+        '{{TWITTER_CARD}}': twitter_card,
+        '{{TWITTER_TITLE}}': twitter_title,
+        '{{TWITTER_DESCRIPTION}}': twitter_description,
+        '{{TWITTER_EXTRA}}': build_twitter_extra(twitter_image_url, twitter_image_alt),
+        '{{CANONICAL_URL}}': canonical_url,
+        '{{JSON_LD_BLOCK}}': build_json_ld_block(json_ld_data),
+    }
+
+
+def build_recipe_nav_actions():
+    """Return the recipe-page print controls markup."""
+    return '''<div class="print-controls">
+                <button onclick="printStandard()" class="print-btn" aria-label="Print this recipe in standard format">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                        <rect x="6" y="14" width="12" height="8"></rect>
+                    </svg>
+                    <span class="print-btn-text">Print</span>
+                </button>
+                <button onclick="printRecipeCard()" class="print-btn print-btn-card" aria-label="Print as recipe card">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="2" y1="10" x2="22" y2="10"></line>
+                    </svg>
+                    <span class="print-btn-text">Card</span>
+                </button>
+            </div>'''
+
+
+def build_about_nav_actions():
+    """Return invisible nav actions so the About header matches recipe-page geometry."""
+    return '''<div class="print-controls about-nav-actions" aria-hidden="true">
+                <button class="print-btn" tabindex="-1">Print</button>
+                <button class="print-btn print-btn-card" tabindex="-1">Card</button>
+            </div>'''
+
+
+def validate_generated_page(page_path, required_strings):
+    """Raise an error if a generated page is missing required metadata markers."""
+    if not page_path.exists():
+        raise FileNotFoundError(f"Generated page not found: {page_path}")
+
+    page_html = page_path.read_text(encoding='utf-8')
+    missing_strings = [marker for marker in required_strings if marker not in page_html]
+    if missing_strings:
+        raise ValueError(
+            f"{page_path.name} is missing required metadata markers: {', '.join(missing_strings)}"
+        )
+
+
+def validate_generated_output(output_dir, recipes_meta):
+    """Sanity-check generated pages for core SEO and sharing metadata."""
+    output_path = Path(output_dir)
+    shared_markers = [
+        '<title>',
+        '<meta name="description"',
+        '<link rel="canonical"',
+        '<meta property="og:type"',
+        '<meta property="og:title"',
+        '<meta property="og:description"',
+        '<meta property="twitter:card"',
+        '<meta property="twitter:title"',
+        '<meta property="twitter:description"',
+    ]
+
+    validate_generated_page(
+        output_path / 'index.html',
+        shared_markers + [
+            '<script type="application/ld+json">',
+            '<meta property="og:image"',
+            '<meta property="twitter:image"',
+        ]
+    )
+    validate_generated_page(output_path / 'about.html', shared_markers)
+
+    if recipes_meta:
+        sample_recipe_path = output_path / f"{recipes_meta[0]['filename']}.html"
+        validate_generated_page(
+            sample_recipe_path,
+            shared_markers + [
+                '<script type="application/ld+json">',
+                '"@type": "Recipe"',
+                '<meta property="og:image"',
+                '<meta property="twitter:image"',
+            ]
+        )
+        print(f"Validated metadata for index, about, and sample recipe: {sample_recipe_path.name}")
+    else:
+        print("No recipe pages generated; skipped sample recipe metadata validation.")
 
 def slugify(text):
     """Convert text to URL-friendly slug."""
@@ -108,15 +305,18 @@ def format_ingredient_item(ingredient):
         f'aria-label="Check off {escape(ingredient_text)}"><span>{escape(ingredient_text)}</span></label></li>'
     )
 
+
+def format_category_pill(category, linked=False):
+    """Render a category pill, optionally linking to the homepage filter state."""
+    category_text = escape(category)
+    if linked:
+        category_slug = quote(str(category).strip().lower())
+        return f'<a class="category" href="/?category={category_slug}">{category_text}</a>'
+    return f'<span class="category">{category_text}</span>'
+
 def generate_recipe_page(recipe, output_dir):
     """Generate individual recipe HTML page from template."""
-    # Load template
-    template_path = Path('templates/recipe.html')
-    if not template_path.exists():
-        raise FileNotFoundError("templates/recipe.html not found")
-
-    with open(template_path, 'r', encoding='utf-8') as f:
-        template = f.read()
+    template = load_template('templates/recipe.html')
 
     recipe_id = recipe.get('identifier', '')
     slug = slugify(recipe.get('name', 'recipe'))
@@ -159,7 +359,7 @@ def generate_recipe_page(recipe, output_dir):
 
     # Categories
     categories = recipe.get('recipeCategory', [])
-    categories_html = ' '.join([f'<span class="category">{escape(cat)}</span>' for cat in categories])
+    categories_html = ' '.join([format_category_pill(cat, linked=True) for cat in categories])
 
     # Credit
     credit = escape(recipe.get('creditText', ''))
@@ -220,23 +420,17 @@ def generate_recipe_page(recipe, output_dir):
     if recipe.get('datePublished'):
         json_ld["datePublished"] = recipe.get('datePublished')
 
-    json_ld_script = json.dumps(json_ld, ensure_ascii=False, indent=2)
+    page_scripts = build_page_scripts(
+        load_partial(PARTIALS_DIR / 'print_helpers.js'),
+        load_partial(PARTIALS_DIR / 'hamburger_menu.js')
+    )
 
     # Prepare template replacements
     replacements = {
+        '{{NAV_ACTIONS}}': build_recipe_nav_actions(),
         '{{RECIPE_NAME}}': name,
-        '{{META_DESCRIPTION}}': meta_description,
         '{{RECIPE_URL}}': recipe_url,
-        '{{OG_IMAGE}}': (
-            f'<meta property="og:image" content="{full_image_url}">\n'
-            f'    <meta property="og:image:alt" content="Photo of {name}">\n'
-            f'    <meta property="og:site_name" content="Everything that Rises">'
-        ) if full_image_url else '<meta property="og:site_name" content="Everything that Rises">',
-        '{{TWITTER_IMAGE}}': (
-            f'<meta property="twitter:image" content="{full_image_url}">\n'
-            f'    <meta property="twitter:image:alt" content="Photo of {name}">'
-        ) if full_image_url else '',
-        '{{JSON_LD}}': json_ld_script,
+        '{{PAGE_SCRIPTS}}': page_scripts,
         '{{DESCRIPTION}}': f'<p class="description">{description}</p>' if description else '',
         '{{CATEGORIES}}': f'<div class="categories">{categories_html}</div>' if categories_html else '',
         '{{RECIPE_IMAGE}}': f'<div class="recipe-image"><img src="{image_url}" alt="Photo of {name}"></div>' if image_url else '',
@@ -251,11 +445,26 @@ def generate_recipe_page(recipe, output_dir):
             (f'<p><a href="{source_url}" target="_blank" rel="noopener" aria-label="View original recipe on {credit if credit else "source website"}">View Original Recipe</a></p>' if source_url else '') +
             '</footer>') if (credit or source_url) else ''
     }
+    replacements.update(build_head_replacements(
+        page_title=f'{name} - Everything that Rises',
+        meta_description=meta_description,
+        og_type='article',
+        page_url=recipe_url,
+        og_title=name,
+        og_description=meta_description,
+        canonical_url=recipe_url,
+        twitter_card='summary_large_image',
+        twitter_title=name,
+        twitter_description=meta_description,
+        json_ld_data=json_ld,
+        og_image_url=full_image_url,
+        og_image_alt=f'Photo of {name}' if full_image_url else '',
+        twitter_image_url=full_image_url,
+        twitter_image_alt=f'Photo of {name}' if full_image_url else '',
+    ))
 
     # Apply replacements
-    html = template
-    for placeholder, value in replacements.items():
-        html = html.replace(placeholder, value)
+    html = apply_replacements(template, replacements)
 
     # Write file with .html extension
     output_path = Path(output_dir) / f"{filename}.html"
@@ -321,13 +530,7 @@ def generate_sitemap(recipes_meta, output_dir):
 
 def generate_index_page(recipes_meta, output_dir):
     """Generate index page with all recipes from template."""
-    # Load template
-    template_path = Path('templates/index.html')
-    if not template_path.exists():
-        raise FileNotFoundError("templates/index.html not found")
-
-    with open(template_path, 'r', encoding='utf-8') as f:
-        template = f.read()
+    template = load_template('templates/index.html')
 
     # Build recipe cards
     cards_html = ''
@@ -335,7 +538,7 @@ def generate_index_page(recipes_meta, output_dir):
         # Better alt text for images
         alt_text = f"{meta['name']} recipe photo" if meta['image'] else ''
         image_html = f'<img src="{meta["image"]}" alt="{alt_text}">' if meta['image'] else '<div class="no-image" role="img" aria-label="No image available">No Image</div>'
-        categories_html = ' '.join([f'<span class="category">{escape(cat)}</span>' for cat in meta['categories']])
+        categories_html = ' '.join([format_category_pill(cat) for cat in meta['categories']])
 
         searchable_ingredients = [
             normalize_ingredient_text(ingredient)
@@ -376,158 +579,201 @@ def generate_index_page(recipes_meta, output_dir):
     # Get first recipe image for og:image if available
     first_image = next((meta['image'] for meta in recipes_meta if meta['image']), '')
     full_first_image = f"{BASE_URL}/{first_image}" if first_image and not first_image.startswith('http') else first_image
-    website_json_ld = json.dumps({
+    website_json_ld = {
         "@context": "https://schema.org",
         "@type": "WebSite",
         "name": "Everything that Rises",
         "url": BASE_URL,
         "description": f"A curated collection of {len(recipes_meta)} delicious recipes from around the world."
-    }, ensure_ascii=False, indent=2)
-
-    # Build JavaScript (needs {{ escaping for Python f-strings)
-    javascript = f'''<script>
-        // Search and filter functionality
+    }
+    # Build JavaScript for homepage search/filter interactions
+    search_script = '''        // Search and filter functionality
         const searchInput = document.getElementById('search');
         const filterBtns = document.querySelectorAll('.filter-btn');
         const recipeCards = document.querySelectorAll('.recipe-card');
         const noResults = document.getElementById('no-results');
+        const validCategories = new Set(Array.from(filterBtns).map(btn => btn.dataset.category));
 
         let currentCategory = 'all';
         let currentSearch = '';
 
-        function filterRecipes() {{{{
+        function syncActiveFilterButton() {
+            filterBtns.forEach(btn => {
+                const isActive = btn.dataset.category === currentCategory;
+                btn.classList.toggle('active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+        }
+
+        function updateUrlState() {
+            const params = new URLSearchParams(window.location.search);
+
+            if (currentCategory && currentCategory !== 'all') {
+                params.set('category', currentCategory);
+            } else {
+                params.delete('category');
+            }
+
+            if (currentSearch) {
+                params.set('q', currentSearch);
+            } else {
+                params.delete('q');
+            }
+
+            const queryString = params.toString();
+            const nextUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
+            window.history.replaceState({ category: currentCategory, search: currentSearch }, '', nextUrl);
+        }
+
+        function applyUrlState() {
+            const params = new URLSearchParams(window.location.search);
+            const requestedCategory = (params.get('category') || 'all').trim().toLowerCase();
+            const requestedSearch = (params.get('q') || '').trim().toLowerCase();
+
+            currentCategory = validCategories.has(requestedCategory) ? requestedCategory : 'all';
+            currentSearch = requestedSearch;
+            searchInput.value = requestedSearch;
+            syncActiveFilterButton();
+            filterRecipes();
+        }
+
+        function filterRecipes() {
             let visibleCount = 0;
 
-            recipeCards.forEach(card => {{{{
+            recipeCards.forEach(card => {
                 const cardName = card.querySelector('h2').textContent.toLowerCase();
                 const cardDesc = card.querySelector('.card-description')?.textContent.toLowerCase() || '';
                 const cardIngredients = card.dataset.ingredients || '';
                 const cardCategories = JSON.parse(card.dataset.categories || '[]');
 
                 let matchesSearch = false;
-                if (currentSearch === '') {{{{
+                if (currentSearch === '') {
                     matchesSearch = true;
-                }}}} else if (currentSearch.includes(',')) {{{{
+                } else if (currentSearch.includes(',')) {
                     // Comma-separated search: AND logic - all terms must match in ingredients
                     const searchTerms = currentSearch.split(',').map(term => term.trim()).filter(term => term.length > 0);
                     matchesSearch = searchTerms.every(term => cardIngredients.includes(term));
-                }}}} else if (currentSearch.length === 1) {{{{
+                } else if (currentSearch.length === 1) {
                     // For single character, match word-initial letters in title only
                     const nameWords = cardName.split(/\\s+/);
                     matchesSearch = nameWords.some(word => word.startsWith(currentSearch));
-                }}}} else {{{{
+                } else {
                     // For 2+ characters, search title, description, and ingredients
                     matchesSearch = cardName.includes(currentSearch) ||
                                     cardDesc.includes(currentSearch) ||
                                     cardIngredients.includes(currentSearch);
-                }}}}
+                }
 
                 const matchesCategory = currentCategory === 'all' ||
                     cardCategories.includes(currentCategory);
 
-                if (matchesSearch && matchesCategory) {{{{
+                if (matchesSearch && matchesCategory) {
                     card.style.display = '';
                     visibleCount++;
-                }}}} else {{{{
+                } else {
                     card.style.display = 'none';
-                }}}}
-            }}}});
+                }
+            });
 
             noResults.style.display = visibleCount === 0 ? 'block' : 'none';
-        }}}}
+        }
 
-        searchInput.addEventListener('input', (e) => {{{{
+        searchInput.addEventListener('input', (e) => {
             currentSearch = e.target.value.toLowerCase();
+            updateUrlState();
             filterRecipes();
-        }}}});
+        });
 
-        filterBtns.forEach(btn => {{{{
-            btn.addEventListener('click', () => {{{{
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
                 // If clicking an already active button (except "All Recipes"), toggle it off
-                if (btn.classList.contains('active') && btn.dataset.category !== 'all') {{{{
-                    // Find and activate the "All Recipes" button
-                    filterBtns.forEach(b => {{{{
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
-                    }}}});
-                    const allBtn = Array.from(filterBtns).find(b => b.dataset.category === 'all');
-                    if (allBtn) {{{{
-                        allBtn.classList.add('active');
-                        allBtn.setAttribute('aria-pressed', 'true');
-                        currentCategory = 'all';
-                    }}}}
-                }}}} else {{{{
-                    // Normal behavior: activate the clicked button
-                    filterBtns.forEach(b => {{{{
-                        b.classList.remove('active');
-                        b.setAttribute('aria-pressed', 'false');
-                    }}}});
-                    btn.classList.add('active');
-                    btn.setAttribute('aria-pressed', 'true');
+                if (btn.classList.contains('active') && btn.dataset.category !== 'all') {
+                    currentCategory = 'all';
+                } else {
                     currentCategory = btn.dataset.category;
-                }}}}
+                }
+                syncActiveFilterButton();
+                updateUrlState();
                 filterRecipes();
-            }}}});
-        }}}});
+            });
+        });
 
-        // Hamburger menu functionality
-        const hamburgerMenu = document.getElementById('hamburgerMenu');
-        const hamburgerIcon = hamburgerMenu.querySelector('.hamburger-icon');
+        window.addEventListener('popstate', () => {
+            applyUrlState();
+        });
 
-        hamburgerIcon.addEventListener('click', () => {{{{
-            hamburgerMenu.classList.toggle('active');
-        }}}});
-
-        // Close menu when clicking outside
-        document.addEventListener('click', (e) => {{{{
-            if (!hamburgerMenu.contains(e.target)) {{{{
-                hamburgerMenu.classList.remove('active');
-            }}}}
-        }}}});
-
-        // Close menu when clicking on menu links
-        const menuLinks = hamburgerMenu.querySelectorAll('.menu a');
-        menuLinks.forEach(link => {{{{
-            link.addEventListener('click', () => {{{{
-                hamburgerMenu.classList.remove('active');
-            }}}});
-        }}}});
-    </script>'''
+        applyUrlState();
+'''
+    page_scripts = build_page_scripts(
+        search_script,
+        load_partial(PARTIALS_DIR / 'hamburger_menu.js')
+    )
 
     # Prepare template replacements
     replacements = {
+        '{{NAV_ACTIONS}}': '',
         '{{RECIPE_COUNT}}': str(len(recipes_meta)),
         '{{BASE_URL}}': BASE_URL,
-        '{{OG_IMAGE}}': (
-            f'<meta property="og:image" content="{full_first_image}">\n'
-            f'    <meta property="og:image:alt" content="Everything that Rises recipe collection preview">\n'
-            f'    <meta property="og:site_name" content="Everything that Rises">'
-        ) if full_first_image else '<meta property="og:site_name" content="Everything that Rises">',
-        '{{TWITTER_IMAGE}}': (
-            f'<meta property="twitter:image" content="{full_first_image}">\n'
-            f'    <meta property="twitter:image:alt" content="Everything that Rises recipe collection preview">'
-        ) if full_first_image else '',
-        '{{JSON_LD}}': website_json_ld,
         '{{CATEGORY_FILTERS}}': categories_filter,
         '{{RECIPE_CARDS}}': cards_html,
-        '{{JAVASCRIPT}}': javascript
+        '{{PAGE_SCRIPTS}}': page_scripts
     }
+    index_title = f'Everything that Rises - {len(recipes_meta)} Delicious Recipes'
+    index_description = (
+        f'A curated collection of {len(recipes_meta)} delicious recipes from around the world. '
+        'Browse, search, and filter recipes by category and ingredients.'
+    )
+    replacements.update(build_head_replacements(
+        page_title=index_title,
+        meta_description=index_description,
+        og_type='website',
+        page_url=BASE_URL,
+        og_title=index_title,
+        og_description=index_description,
+        canonical_url=BASE_URL,
+        twitter_card='summary_large_image',
+        twitter_title=index_title,
+        twitter_description=index_description,
+        json_ld_data=website_json_ld,
+        og_image_url=full_first_image,
+        og_image_alt='Everything that Rises recipe collection preview' if full_first_image else '',
+        twitter_image_url=full_first_image,
+        twitter_image_alt='Everything that Rises recipe collection preview' if full_first_image else '',
+    ))
 
     # Apply replacements
-    html = template
-    for placeholder, value in replacements.items():
-        html = html.replace(placeholder, value)
+    html = apply_replacements(template, replacements)
 
     output_path = Path(output_dir) / 'index.html'
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
 
 def copy_about_page(output_dir):
-    """Copy about page from template."""
+    """Render about page from template."""
     about_template = Path('templates/about.html')
     if about_template.exists():
         output_path = Path(output_dir) / 'about.html'
-        shutil.copy(about_template, output_path)
+        template = load_template(about_template)
+        replacements = {
+            '{{NAV_ACTIONS}}': build_about_nav_actions(),
+            '{{PAGE_SCRIPTS}}': build_page_scripts(load_partial(PARTIALS_DIR / 'hamburger_menu.js')),
+        }
+        about_title = 'About - Everything that Rises'
+        about_description = 'Learn about Everything that Rises, a curated collection of delicious recipes.'
+        replacements.update(build_head_replacements(
+            page_title=about_title,
+            meta_description=about_description,
+            og_type='website',
+            page_url=f'{BASE_URL}/about',
+            og_title=about_title,
+            og_description=about_description,
+            canonical_url=f'{BASE_URL}/about',
+            twitter_card='summary',
+            twitter_title=about_title,
+            twitter_description=about_description,
+        ))
+        html = apply_replacements(template, replacements)
+        output_path.write_text(html, encoding='utf-8')
         print("Copied about page from templates/about.html")
     else:
         print("Warning: templates/about.html not found. Skipping about page.")
@@ -583,6 +829,10 @@ def generate_site(recipes_file, output_dir):
     # Generate sitemap
     print("Generating sitemap...")
     generate_sitemap(recipes_meta, output_dir)
+
+    # Validate key metadata on generated pages
+    print("Validating generated metadata...")
+    validate_generated_output(output_dir, recipes_meta)
 
     print(f"\n{'='*50}")
     print(f"Site generated successfully!")

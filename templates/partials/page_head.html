@@ -1,0 +1,37 @@
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{PAGE_TITLE}}</title>
+    <meta name="description" content="{{META_DESCRIPTION}}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="{{OG_TYPE}}">
+    <meta property="og:url" content="{{PAGE_URL}}">
+    <meta property="og:title" content="{{OG_TITLE}}">
+    <meta property="og:description" content="{{OG_DESCRIPTION}}">
+    {{OG_EXTRA}}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="{{TWITTER_CARD}}">
+    <meta property="twitter:url" content="{{PAGE_URL}}">
+    <meta property="twitter:title" content="{{TWITTER_TITLE}}">
+    <meta property="twitter:description" content="{{TWITTER_DESCRIPTION}}">
+    {{TWITTER_EXTRA}}
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="{{CANONICAL_URL}}">
+
+    {{JSON_LD_BLOCK}}
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-8KBWFBFNLF');
+    </script>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>

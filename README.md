@@ -32,8 +32,7 @@ This script will:
 ### 3. View your website locally
 
 ```bash
-cd public
-python3 -m http.server 8000
+python3 serve.py
 ```
 
 Then open http://localhost:8000 in your browser.
@@ -57,6 +56,7 @@ recipes/
 │       └── style.css                   # Website styling
 ├── download_images.py                  # Image download script
 ├── generate_site.py                    # Site generator script
+├── serve.py                            # Local preview server with clean URL support
 ├── style.css                           # Source CSS file
 └── build.sh                            # Master build script
 ```

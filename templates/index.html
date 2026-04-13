@@ -1,80 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Everything that Rises - {{RECIPE_COUNT}} Delicious Recipes</title>
-    <meta name="description" content="A curated collection of {{RECIPE_COUNT}} delicious recipes from around the world. Browse, search, and filter recipes by category and ingredients.">
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{BASE_URL}}">
-    <meta property="og:title" content="Everything that Rises - {{RECIPE_COUNT}} Delicious Recipes">
-    <meta property="og:description" content="A curated collection of {{RECIPE_COUNT}} delicious recipes from around the world. Browse, search, and filter recipes by category and ingredients.">
-    {{OG_IMAGE}}
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="{{BASE_URL}}">
-    <meta property="twitter:title" content="Everything that Rises - {{RECIPE_COUNT}} Delicious Recipes">
-    <meta property="twitter:description" content="A curated collection of {{RECIPE_COUNT}} delicious recipes from around the world. Browse, search, and filter recipes by category and ingredients.">
-    {{TWITTER_IMAGE}}
-
-    <!-- Canonical URL -->
-    <link rel="canonical" href="{{BASE_URL}}">
-
-    <!-- JSON-LD Structured Data -->
-    <script type="application/ld+json">
-{{JSON_LD}}
-    </script>
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-8KBWFBFNLF');
-    </script>
-
-    <link rel="stylesheet" href="css/style.css">
-</head>
+{{PAGE_HEAD}}
 <body>
     <a href="#main-content" class="skip-link">Skip to main content</a>
-    <nav class="navbar" role="navigation" aria-label="Main navigation">
-        <div class="container">
-            <h1 class="nav-brand">Everything that Rises <img class="wheat" src="/images/wheat.svg" alt="Wheat Stalk Logo"></h1>
-        </div>
-    </nav>
+    {{HOME_NAV}}
 
-    <div id="hamburgerMenu">
-        <div class="hamburger-icon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <nav class="hamburger-dropdown">
-            <div class="menu-panel" id="mainMenu">
-                <div class="menu">
-                    <a href="/">Home</a>
-                </div>
-                <div class="menu">
-                    <a href="/about">About</a>
-                </div>
-            </div>
-        </nav>
-    </div>
+    {{HAMBURGER_MENU}}
 
     <main id="main-content" class="container" role="main">
-        <div class="filters" role="search" aria-label="Recipe search and filters">
-            <label for="search" class="sr-only">Search recipes by name, description, or ingredients</label>
-            <input type="text" id="search" placeholder="Search recipes (comma-separated for multiple ingredients)..." class="search-input" aria-label="Search recipes by name, description, or ingredients. Use commas to search for multiple ingredients.">
-            <div class="category-filters" role="group" aria-label="Filter recipes by category">
-                <button class="filter-btn active" data-category="all" aria-pressed="true">All Recipes ({{RECIPE_COUNT}})</button>
-                {{CATEGORY_FILTERS}}
+        <section class="home-hero" aria-labelledby="home-title">
+            <div class="hero-copy">
+                <h2 id="home-title">My personal collection of recipes to make, share, and come back to.</h2>
+                <p class="hero-text">
+                    Everything that Rises is a personally curated collection of recipes gathered from around the world. These are the recipes I use every day. This site was created to preserve and share beloved recipes in a simple, accessible format.
+                </p>
+                <p class="hero-signoff">
+                    <img src="/images/alan.svg" alt="Alan signature" class="hero-signature">
+                </p>
             </div>
-        </div>
+            <aside class="hero-aside" aria-label="Browse recipes by category">
+                <p class="filters-kicker">Browse by category</p>
+                <div class="category-filters hero-category-filters" role="group" aria-label="Filter recipes by category">
+                    <button class="filter-btn active" data-category="all" aria-pressed="true">All Recipes ({{RECIPE_COUNT}})</button>
+                    {{CATEGORY_FILTERS}}
+                </div>
+            </aside>
+        </section>
+
+        <section class="browse-panel">
+            <div class="filters" role="search" aria-label="Recipe search and filters">
+                <div class="filters-header">
+                    <div>
+                        <h3>Find the right recipe fast</h3>
+                    </div>
+                    <p class="filters-summary">Use commas for ingredient matchups like <span>lemon, garlic</span>.</p>
+                </div>
+                <label for="search" class="sr-only">Search recipes by name, description, or ingredients</label>
+                <input type="text" id="search" placeholder="Search recipes, ingredients, or notes..." class="search-input" aria-label="Search recipes by name, description, or ingredients. Use commas to search for multiple ingredients.">
+            </div>
+        </section>
 
         <div class="recipe-grid" id="recipe-grid" role="list" aria-label="Recipe cards">
             {{RECIPE_CARDS}}
@@ -85,6 +49,6 @@
         </div>
     </main>
 
-    {{JAVASCRIPT}}
+    {{PAGE_SCRIPTS}}
 </body>
 </html>
