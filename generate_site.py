@@ -193,6 +193,7 @@ def generate_recipe_page(recipe, output_dir):
         "name": recipe.get('name', 'Untitled Recipe'),
         "description": recipe.get('description', ''),
         "image": [full_image_url] if full_image_url else [],
+        "url": recipe_url,
         "recipeYield": recipe_yield,
         "recipeCategory": categories,
         "recipeIngredient": ingredients,
@@ -215,7 +216,7 @@ def generate_recipe_page(recipe, output_dir):
     if credit:
         json_ld["author"] = {"@type": "Person", "name": recipe.get('creditText', '')}
     if source_url:
-        json_ld["url"] = source_url
+        json_ld["isBasedOn"] = source_url
     if recipe.get('datePublished'):
         json_ld["datePublished"] = recipe.get('datePublished')
 
@@ -226,8 +227,15 @@ def generate_recipe_page(recipe, output_dir):
         '{{RECIPE_NAME}}': name,
         '{{META_DESCRIPTION}}': meta_description,
         '{{RECIPE_URL}}': recipe_url,
-        '{{OG_IMAGE}}': f'<meta property="og:image" content="{full_image_url}">' if full_image_url else '',
-        '{{TWITTER_IMAGE}}': f'<meta property="twitter:image" content="{full_image_url}">' if full_image_url else '',
+        '{{OG_IMAGE}}': (
+            f'<meta property="og:image" content="{full_image_url}">\n'
+            f'    <meta property="og:image:alt" content="Photo of {name}">\n'
+            f'    <meta property="og:site_name" content="Everything that Rises">'
+        ) if full_image_url else '<meta property="og:site_name" content="Everything that Rises">',
+        '{{TWITTER_IMAGE}}': (
+            f'<meta property="twitter:image" content="{full_image_url}">\n'
+            f'    <meta property="twitter:image:alt" content="Photo of {name}">'
+        ) if full_image_url else '',
         '{{JSON_LD}}': json_ld_script,
         '{{DESCRIPTION}}': f'<p class="description">{description}</p>' if description else '',
         '{{CATEGORIES}}': f'<div class="categories">{categories_html}</div>' if categories_html else '',
@@ -368,6 +376,13 @@ def generate_index_page(recipes_meta, output_dir):
     # Get first recipe image for og:image if available
     first_image = next((meta['image'] for meta in recipes_meta if meta['image']), '')
     full_first_image = f"{BASE_URL}/{first_image}" if first_image and not first_image.startswith('http') else first_image
+    website_json_ld = json.dumps({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "Everything that Rises",
+        "url": BASE_URL,
+        "description": f"A curated collection of {len(recipes_meta)} delicious recipes from around the world."
+    }, ensure_ascii=False, indent=2)
 
     # Build JavaScript (needs {{ escaping for Python f-strings)
     javascript = f'''<script>
@@ -483,8 +498,16 @@ def generate_index_page(recipes_meta, output_dir):
     replacements = {
         '{{RECIPE_COUNT}}': str(len(recipes_meta)),
         '{{BASE_URL}}': BASE_URL,
-        '{{OG_IMAGE}}': f'<meta property="og:image" content="{full_first_image}">' if full_first_image else '',
-        '{{TWITTER_IMAGE}}': f'<meta property="twitter:image" content="{full_first_image}">' if full_first_image else '',
+        '{{OG_IMAGE}}': (
+            f'<meta property="og:image" content="{full_first_image}">\n'
+            f'    <meta property="og:image:alt" content="Everything that Rises recipe collection preview">\n'
+            f'    <meta property="og:site_name" content="Everything that Rises">'
+        ) if full_first_image else '<meta property="og:site_name" content="Everything that Rises">',
+        '{{TWITTER_IMAGE}}': (
+            f'<meta property="twitter:image" content="{full_first_image}">\n'
+            f'    <meta property="twitter:image:alt" content="Everything that Rises recipe collection preview">'
+        ) if full_first_image else '',
+        '{{JSON_LD}}': website_json_ld,
         '{{CATEGORY_FILTERS}}': categories_filter,
         '{{RECIPE_CARDS}}': cards_html,
         '{{JAVASCRIPT}}': javascript
