@@ -269,11 +269,6 @@
   margin-right: 0;
 }
 
-.about-nav-actions {
-  visibility: hidden;
-  pointer-events: none;
-}
-
 .print-btn {
   display: flex;
   align-items: center;
@@ -943,19 +938,6 @@ a.category:focus-visible {
 .recipe-footer {
   padding-top: 0.75rem;
   border-top: 1px solid var(--surface-rule);
-}
-
-/* About / Empty States */
-.about-content {
-  max-width: 62ch;
-}
-
-.about-content p + p {
-  margin-top: 1.1rem;
-}
-
-.about-content .hero-signoff {
-  margin-top: 2rem;
 }
 
 .no-results {

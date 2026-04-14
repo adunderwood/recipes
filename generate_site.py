@@ -11,9 +11,10 @@ from urllib.parse import quote
 from html import escape
 
 # Configuration
-BASE_URL = 'https://everything.thatrises.com'
+DEFAULT_BASE_URL = 'https://everything.thatrises.com'
 PARTIALS_DIR = Path('templates/partials')
 STYLE_CSS_PATH = Path('style.css')
+SITE_CONFIG_PATH = Path('data/site_config.json')
 FAVICON_ASSETS = (
     'favicon.ico',
     'favicon-16x16.png',
@@ -23,6 +24,28 @@ FAVICON_ASSETS = (
     'android-chrome-512x512.png',
     'site.webmanifest',
 )
+DEFAULT_SITE_CONFIG = {
+    'site_name': 'Everything that Rises',
+    'base_url': DEFAULT_BASE_URL,
+    'theme_color': '#f4ede1',
+    'analytics_id': '',
+    'back_link_label': 'Back to All Recipes',
+    'brand_logo_alt': 'Wheat Stalk Logo',
+}
+
+
+def load_site_config():
+    """Load site-level branding/config with safe defaults."""
+    config = DEFAULT_SITE_CONFIG.copy()
+    if SITE_CONFIG_PATH.exists():
+        with open(SITE_CONFIG_PATH, 'r', encoding='utf-8') as f:
+            loaded = json.load(f)
+        config.update({key: value for key, value in loaded.items() if value is not None})
+    return config
+
+
+SITE_CONFIG = load_site_config()
+BASE_URL = SITE_CONFIG['base_url']
 
 
 def load_partial(path):
@@ -46,6 +69,7 @@ def load_template(path):
         '{{PAGE_HEAD}}': PARTIALS_DIR / 'page_head.html',
         '{{HOME_NAV}}': PARTIALS_DIR / 'home_nav.html',
         '{{BACK_NAV}}': PARTIALS_DIR / 'back_nav.html',
+        '{{HOME_INTRO}}': PARTIALS_DIR / 'home_intro.html',
     }
 
     for placeholder, partial_path in partials.items():
@@ -86,7 +110,7 @@ def build_og_extra(image_url='', image_alt=''):
         tags.append(f'<meta property="og:image" content="{image_url}">')
         if image_alt:
             tags.append(f'<meta property="og:image:alt" content="{image_alt}">')
-    tags.append('<meta property="og:site_name" content="Everything that Rises">')
+    tags.append(f'<meta property="og:site_name" content="{escape(SITE_CONFIG["site_name"])}">')
     return '\n    '.join(tags)
 
 
@@ -125,7 +149,22 @@ def build_head_replacements(
     existing_favicon_assets = [path for path in favicon_asset_paths if path.exists()]
     if existing_favicon_assets:
         favicon_version = str(int(max(path.stat().st_mtime for path in existing_favicon_assets)))
+    analytics_block = ''
+    analytics_id = SITE_CONFIG.get('analytics_id', '').strip()
+    if analytics_id:
+        analytics_block = f'''<!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={analytics_id}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+
+      gtag('config', '{analytics_id}');
+    </script>'''
     return {
+        '{{SITE_NAME}}': SITE_CONFIG['site_name'],
+        '{{BACK_LINK_LABEL}}': SITE_CONFIG['back_link_label'],
+        '{{BRAND_LOGO_ALT}}': SITE_CONFIG['brand_logo_alt'],
         '{{PAGE_TITLE}}': page_title,
         '{{META_DESCRIPTION}}': meta_description,
         '{{OG_TYPE}}': og_type,
@@ -141,6 +180,8 @@ def build_head_replacements(
         '{{JSON_LD_BLOCK}}': build_json_ld_block(json_ld_data),
         '{{STYLE_VERSION}}': style_version,
         '{{FAVICON_VERSION}}': favicon_version,
+        '{{THEME_COLOR}}': SITE_CONFIG['theme_color'],
+        '{{ANALYTICS_BLOCK}}': analytics_block,
     }
 
 
@@ -181,13 +222,6 @@ def copy_favicon_assets(output_dir):
             print(f"Warning: {source} not found. Skipping...")
 
 
-def build_about_nav_actions():
-    """Return invisible nav actions so the About header matches recipe-page geometry."""
-    return '''<div class="print-controls about-nav-actions" aria-hidden="true">
-                <button class="print-btn" tabindex="-1">Print</button>
-            </div>'''
-
-
 def validate_generated_page(page_path, required_strings):
     """Raise an error if a generated page is missing required metadata markers."""
     if not page_path.exists():
@@ -224,8 +258,6 @@ def validate_generated_output(output_dir, recipes_meta):
             '<meta property="twitter:image"',
         ]
     )
-    validate_generated_page(output_path / 'about.html', shared_markers)
-
     if recipes_meta:
         sample_recipe_path = output_path / f"{recipes_meta[0]['filename']}.html"
         validate_generated_page(
@@ -237,7 +269,7 @@ def validate_generated_output(output_dir, recipes_meta):
                 '<meta property="twitter:image"',
             ]
         )
-        print(f"Validated metadata for index, about, and sample recipe: {sample_recipe_path.name}")
+        print(f"Validated metadata for index and sample recipe: {sample_recipe_path.name}")
     else:
         print("No recipe pages generated; skipped sample recipe metadata validation.")
 
@@ -474,7 +506,7 @@ def generate_recipe_page(recipe, output_dir):
             '</footer>') if (credit or source_url) else ''
     }
     replacements.update(build_head_replacements(
-        page_title=f'{name} - Everything that Rises',
+        page_title=f'{name} - {SITE_CONFIG["site_name"]}',
         meta_description=meta_description,
         og_type='article',
         page_url=recipe_url,
@@ -525,14 +557,6 @@ def generate_sitemap(recipes_meta, output_dir):
     <lastmod>{current_date}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-  </url>''')
-
-    # Add about page
-    sitemap_entries.append(f'''  <url>
-    <loc>{BASE_URL}/about</loc>
-    <lastmod>{current_date}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
   </url>''')
 
     # Add all recipe pages
@@ -614,7 +638,7 @@ def generate_index_page(recipes_meta, output_dir):
     website_json_ld = {
         "@context": "https://schema.org",
         "@type": "WebSite",
-        "name": "Everything that Rises",
+        "name": SITE_CONFIG["site_name"],
         "url": BASE_URL,
         "description": f"A curated collection of {len(recipes_meta)} delicious recipes from around the world."
     }
@@ -762,7 +786,7 @@ def generate_index_page(recipes_meta, output_dir):
         '{{RECIPE_CARDS}}': cards_html,
         '{{PAGE_SCRIPTS}}': page_scripts
     }
-    index_title = f'Everything that Rises - {len(recipes_meta)} Delicious Recipes'
+    index_title = f'{SITE_CONFIG["site_name"]} - {len(recipes_meta)} Delicious Recipes'
     index_description = (
         f'A curated collection of {len(recipes_meta)} delicious recipes from around the world. '
         'Browse, search, and filter recipes by category and ingredients.'
@@ -780,9 +804,9 @@ def generate_index_page(recipes_meta, output_dir):
         twitter_description=index_description,
         json_ld_data=website_json_ld,
         og_image_url=full_first_image,
-        og_image_alt='Everything that Rises recipe collection preview' if full_first_image else '',
+        og_image_alt=f'{SITE_CONFIG["site_name"]} recipe collection preview' if full_first_image else '',
         twitter_image_url=full_first_image,
-        twitter_image_alt='Everything that Rises recipe collection preview' if full_first_image else '',
+        twitter_image_alt=f'{SITE_CONFIG["site_name"]} recipe collection preview' if full_first_image else '',
     ))
 
     # Apply replacements
@@ -791,36 +815,6 @@ def generate_index_page(recipes_meta, output_dir):
     output_path = Path(output_dir) / 'index.html'
     with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
-
-def copy_about_page(output_dir):
-    """Render about page from template."""
-    about_template = Path('templates/about.html')
-    if about_template.exists():
-        output_path = Path(output_dir) / 'about.html'
-        template = load_template(about_template)
-        replacements = {
-            '{{NAV_ACTIONS}}': build_about_nav_actions(),
-            '{{PAGE_SCRIPTS}}': '',
-        }
-        about_title = 'About - Everything that Rises'
-        about_description = 'Learn about Everything that Rises, a curated collection of delicious recipes.'
-        replacements.update(build_head_replacements(
-            page_title=about_title,
-            meta_description=about_description,
-            og_type='website',
-            page_url=f'{BASE_URL}/about',
-            og_title=about_title,
-            og_description=about_description,
-            canonical_url=f'{BASE_URL}/about',
-            twitter_card='summary',
-            twitter_title=about_title,
-            twitter_description=about_description,
-        ))
-        html = apply_replacements(template, replacements)
-        output_path.write_text(html, encoding='utf-8')
-        print("Copied about page from templates/about.html")
-    else:
-        print("Warning: templates/about.html not found. Skipping about page.")
 
 def generate_site(recipes_file, output_dir):
     """Generate complete static site."""
@@ -869,9 +863,11 @@ def generate_site(recipes_file, output_dir):
     print("Generating index page...")
     generate_index_page(recipes_meta, output_dir)
 
-    # Copy about page from template
-    print("Copying about page...")
-    copy_about_page(output_dir)
+    # Remove legacy about page output if present
+    legacy_about_page = output_path / 'about.html'
+    if legacy_about_page.exists():
+        legacy_about_page.unlink()
+        print("Removed legacy public/about.html")
 
     # Generate sitemap
     print("Generating sitemap...")

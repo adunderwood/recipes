@@ -25,19 +25,11 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v={{FAVICON_VERSION}}">
     <link rel="icon" href="/favicon.ico?v={{FAVICON_VERSION}}" sizes="any">
     <link rel="manifest" href="/site.webmanifest?v={{FAVICON_VERSION}}">
-    <meta name="theme-color" content="#f4ede1">
+    <meta name="theme-color" content="{{THEME_COLOR}}">
 
     {{JSON_LD_BLOCK}}
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-8KBWFBFNLF"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-8KBWFBFNLF');
-    </script>
+    {{ANALYTICS_BLOCK}}
 
     <link rel="stylesheet" href="css/style.css?v={{STYLE_VERSION}}">
 </head>

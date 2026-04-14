@@ -1,56 +1,73 @@
 # Recipe Collection Website
 
-A static website generator for Recipe Sage exports that creates a beautiful, searchable recipe collection.
+A static site generator for RecipeSage exports that builds a searchable, mobile-friendly recipe website.
 
 ## Features
 
-- **Static Site Generation**: Converts Recipe Sage JSON export to a static HTML website
+- **Static Site Generation**: Converts a RecipeSage JSON-LD export into a static HTML website
 - **Local Image Hosting**: Downloads all recipe images to serve them locally (polite to AWS)
 - **Search & Filter**: Real-time search and category filtering
 - **Responsive Design**: Mobile-friendly layout that works on all devices
-- **Easy Updates**: Simply re-run the build script when you add new recipes
+- **Easy Updates**: Re-run the build whenever you export updated recipe data
 
 ## Quick Start
 
-### 1. Export your recipes from Recipe Sage
+### 1. Export your recipes from RecipeSage
 
-Place your `recipes.json` export file in the `data/` directory.
+1. Log in to your RecipeSage account.
+2. Open the hamburger menu.
+3. Choose `Settings`.
+4. Choose `Export Recipe Data`.
+5. Export to `JSON-LD (.json)`.
+6. Copy the exported file into `data/recipes.json`.
 
-### 2. Build the website
+### 2. Build the site
 
 ```bash
 ./build.sh
 ```
 
-This script will:
-1. Check that `data/recipes.json` exists
-2. Download all recipe images to the `images/` directory
-3. Copy images to `public/images/`
-4. Copy CSS to `public/css/`
-5. Generate HTML pages for all recipes in the `public/` directory from templates
+This script:
 
-### 3. View your website locally
+1. checks that `data/recipes.json` exists
+2. downloads any missing recipe images to `images/`
+3. copies recipe images to `public/images/`
+4. copies CSS to `public/css/`
+5. copies favicon and manifest assets to the root of `public/`
+6. generates the static site into `public/`
+
+### 3. Preview locally
 
 ```bash
 python3 serve.py
 ```
 
-Then open http://localhost:8000 in your browser.
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
+
+### 4. Deploy
+
+After `./build.sh` finishes, either:
+
+- upload the contents of `public/` to your web server
+- or keep testing locally with `python3 serve.py`
 
 ## File Structure
 
 ```
 recipes/
 ├── data/
-│   ├── recipes.json                    # Your Recipe Sage export
+│   ├── recipes.json                    # Your RecipeSage export
 │   └── recipes_with_local_images.json  # Generated with local image paths
 ├── images/                             # Downloaded recipe images
 ├── templates/                          # Editable page templates
-│   └── about.html                      # About page (edit this file directly)
+│   ├── index.html                      # Homepage template
+│   ├── recipe.html                     # Recipe detail template
+│   └── partials/                       # Shared partials and intro content
 ├── public/                             # Generated website (ready to deploy)
 │   ├── index.html                      # Recipe listing page
-│   ├── about.html                      # About page (copied from templates/)
 │   ├── [recipe-name].html              # Individual recipe pages
+│   ├── favicon.ico                     # Browser/favicon assets
+│   ├── site.webmanifest                # Web app manifest
 │   ├── images/                         # Recipe images
 │   └── css/
 │       └── style.css                   # Website styling
@@ -61,13 +78,15 @@ recipes/
 └── build.sh                            # Master build script
 ```
 
-## Updating with New Recipes
+## Updating Recipe Data
 
-When you add new recipes in Recipe Sage:
+When you add or change recipes in RecipeSage:
 
-1. Export the updated `recipes.json` and place it in `data/`
-2. Run `./build.sh`
-3. The script will download any new images and regenerate all pages from templates
+1. export a fresh `JSON-LD (.json)` file from RecipeSage
+2. copy it to `data/recipes.json`
+3. run `./build.sh`
+
+The build will download any new images and regenerate the site.
 
 ## Deploying to the Web
 
@@ -96,7 +115,7 @@ python3 generate_site.py
 
 ### Styling
 
-Edit `style.css` (in the root directory) to customize colors, fonts, and layout. The CSS uses CSS variables for easy theming:
+Edit [style.css](/Users/alanunderwood/recipes/style.css) to customize colors, fonts, and layout. The CSS uses theme tokens at the top of the file for easy theming:
 
 ```css
 :root {
@@ -107,19 +126,32 @@ Edit `style.css` (in the root directory) to customize colors, fonts, and layout.
 }
 ```
 
-Changes to `style.css` will be copied to `public/css/style.css` on the next build.
+Changes to `style.css` are copied to `public/css/style.css` on the next build.
 
-### About Page
+### Site Config
 
-Edit `templates/about.html` to customize the about page content. This file is copied to `public/about.html` during the build process and will preserve your edits across rebuilds.
+Edit [data/site_config.json](/Users/alanunderwood/recipes/data/site_config.json) to customize the reusable site identity values:
+
+- site name
+- base URL
+- theme color
+- analytics ID
+- back-link label
+- brand logo alt text
+
+This is the best place to start when adapting the project for a different site.
+
+### Homepage Intro
+
+Edit [templates/partials/home_intro.html](/Users/alanunderwood/recipes/templates/partials/home_intro.html) to customize the homepage intro. It stays as HTML so it can include richer branded content like a signature SVG.
 
 ### Recipe Page Template
 
-Edit `templates/recipe.html` to customize the layout and structure of individual recipe pages. The template uses placeholders like `{{RECIPE_NAME}}`, `{{INGREDIENTS}}`, etc. that are replaced with actual recipe data during the build. Changes to this template will be applied to all recipe pages on the next build.
+Edit [templates/recipe.html](/Users/alanunderwood/recipes/templates/recipe.html) to customize the layout and structure of individual recipe pages. The template uses placeholders like `{{RECIPE_NAME}}`, `{{INGREDIENTS}}`, and `{{INSTRUCTIONS}}` that are replaced during the build.
 
 ### Index Page Template
 
-Edit `templates/index.html` to customize the homepage layout and structure. The template uses placeholders like `{{RECIPE_COUNT}}`, `{{RECIPE_CARDS}}`, `{{CATEGORY_FILTERS}}`, etc. The JavaScript for search and filtering is generated dynamically but you can modify the HTML structure and static content.
+Edit [templates/index.html](/Users/alanunderwood/recipes/templates/index.html) to customize the homepage layout and structure. It uses placeholders like `{{RECIPE_COUNT}}`, `{{RECIPE_CARDS}}`, and `{{CATEGORY_FILTERS}}`, while the search/filter JavaScript is generated by the build.
 
 ## Requirements
 
@@ -128,4 +160,4 @@ Edit `templates/index.html` to customize the homepage layout and structure. The 
 
 ## License
 
-This is your personal recipe collection - use it however you'd like!
+Use it however you'd like.
