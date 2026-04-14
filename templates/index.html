@@ -18,6 +18,11 @@
             </div>
             <aside class="hero-aside" aria-label="Browse recipes by category">
                 <p class="filters-kicker">Browse by category</p>
+                <label for="mobile-category-filter" class="sr-only">Filter recipes by category</label>
+                <select id="mobile-category-filter" class="category-select" aria-label="Filter recipes by category">
+                    <option value="all">All Recipes ({{RECIPE_COUNT}})</option>
+                    {{CATEGORY_FILTER_OPTIONS}}
+                </select>
                 <div class="category-filters hero-category-filters" role="group" aria-label="Filter recipes by category">
                     <button class="filter-btn active" data-category="all" aria-pressed="true">All Recipes ({{RECIPE_COUNT}})</button>
                     {{CATEGORY_FILTERS}}

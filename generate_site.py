@@ -14,6 +14,15 @@ from html import escape
 BASE_URL = 'https://everything.thatrises.com'
 PARTIALS_DIR = Path('templates/partials')
 STYLE_CSS_PATH = Path('style.css')
+FAVICON_ASSETS = (
+    'favicon.ico',
+    'favicon-16x16.png',
+    'favicon-32x32.png',
+    'apple-touch-icon.png',
+    'android-chrome-192x192.png',
+    'android-chrome-512x512.png',
+    'site.webmanifest',
+)
 
 
 def load_partial(path):
@@ -111,6 +120,11 @@ def build_head_replacements(
 ):
     """Build the shared placeholder replacements for the page head partial."""
     style_version = str(int(STYLE_CSS_PATH.stat().st_mtime)) if STYLE_CSS_PATH.exists() else '1'
+    favicon_version = '1'
+    favicon_asset_paths = [Path('images') / asset_name for asset_name in FAVICON_ASSETS]
+    existing_favicon_assets = [path for path in favicon_asset_paths if path.exists()]
+    if existing_favicon_assets:
+        favicon_version = str(int(max(path.stat().st_mtime for path in existing_favicon_assets)))
     return {
         '{{PAGE_TITLE}}': page_title,
         '{{META_DESCRIPTION}}': meta_description,
@@ -126,6 +140,7 @@ def build_head_replacements(
         '{{CANONICAL_URL}}': canonical_url,
         '{{JSON_LD_BLOCK}}': build_json_ld_block(json_ld_data),
         '{{STYLE_VERSION}}': style_version,
+        '{{FAVICON_VERSION}}': favicon_version,
     }
 
 
@@ -141,6 +156,29 @@ def build_recipe_nav_actions():
                     <span class="print-btn-text">Print</span>
                 </button>
             </div>'''
+
+
+def copy_favicon_assets(output_dir):
+    """Copy favicon and manifest assets from images/ to the site root."""
+    images_dir = Path('images')
+    output_path = Path(output_dir)
+    favicon_version = '1'
+    existing_favicon_assets = [images_dir / asset_name for asset_name in FAVICON_ASSETS if (images_dir / asset_name).exists()]
+    if existing_favicon_assets:
+        favicon_version = str(int(max(path.stat().st_mtime for path in existing_favicon_assets)))
+
+    for asset_name in FAVICON_ASSETS:
+        source = images_dir / asset_name
+        destination = output_path / asset_name
+        if source.exists():
+            if asset_name == 'site.webmanifest':
+                manifest_contents = source.read_text(encoding='utf-8').replace('{{FAVICON_VERSION}}', favicon_version)
+                destination.write_text(manifest_contents, encoding='utf-8')
+            else:
+                shutil.copy(source, destination)
+            print(f"Copied {asset_name} to public/")
+        else:
+            print(f"Warning: {source} not found. Skipping...")
 
 
 def build_about_nav_actions():
@@ -565,6 +603,10 @@ def generate_index_page(recipes_meta, output_dir):
         f'<button class="filter-btn" data-category="{escape(cat)}" aria-pressed="false" aria-label="Filter by {escape(cat)} recipes">{escape(cat)} ({category_counts[cat]})</button>'
         for cat in sorted(all_categories)
     ])
+    category_filter_options = '\n'.join([
+        f'<option value="{escape(cat)}">{escape(cat)} ({category_counts[cat]})</option>'
+        for cat in sorted(all_categories)
+    ])
 
     # Get first recipe image for og:image if available
     first_image = next((meta['image'] for meta in recipes_meta if meta['image']), '')
@@ -580,6 +622,7 @@ def generate_index_page(recipes_meta, output_dir):
     search_script = '''        // Search and filter functionality
         const searchInput = document.getElementById('search');
         const filterBtns = document.querySelectorAll('.filter-btn');
+        const categorySelect = document.getElementById('mobile-category-filter');
         const recipeCards = document.querySelectorAll('.recipe-card');
         const noResults = document.getElementById('no-results');
         const validCategories = new Set(Array.from(filterBtns).map(btn => btn.dataset.category));
@@ -593,6 +636,10 @@ def generate_index_page(recipes_meta, output_dir):
                 btn.classList.toggle('active', isActive);
                 btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
             });
+
+            if (categorySelect) {
+                categorySelect.value = currentCategory;
+            }
         }
 
         function updateUrlState() {
@@ -674,6 +721,15 @@ def generate_index_page(recipes_meta, output_dir):
             filterRecipes();
         });
 
+        if (categorySelect) {
+            categorySelect.addEventListener('change', (e) => {
+                currentCategory = e.target.value;
+                syncActiveFilterButton();
+                updateUrlState();
+                filterRecipes();
+            });
+        }
+
         filterBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 // If clicking an already active button (except "All Recipes"), toggle it off
@@ -702,6 +758,7 @@ def generate_index_page(recipes_meta, output_dir):
         '{{RECIPE_COUNT}}': str(len(recipes_meta)),
         '{{BASE_URL}}': BASE_URL,
         '{{CATEGORY_FILTERS}}': categories_filter,
+        '{{CATEGORY_FILTER_OPTIONS}}': category_filter_options,
         '{{RECIPE_CARDS}}': cards_html,
         '{{PAGE_SCRIPTS}}': page_scripts
     }
@@ -789,6 +846,9 @@ def generate_site(recipes_file, output_dir):
         print("Copied .htaccess to public/")
     else:
         print("Warning: .htaccess not found in current directory")
+
+    # Copy favicon and manifest assets
+    copy_favicon_assets(output_dir)
 
     # Load recipes
     with open(recipes_file, 'r', encoding='utf-8') as f:
